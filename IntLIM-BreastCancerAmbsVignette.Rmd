@@ -19,7 +19,7 @@ IntLIM, available from Github, can be installed as in the documentation.  Once I
 
 ```{r}
 rm(list = ls())
-library(IntLim)
+library(IntLIM)
 
 
 ```
@@ -33,8 +33,8 @@ Note:  The data is found in the BC.data.vignette.zip file.  This file has to be 
 Load in the breast cancer data using the ReadData() function.  ShowStats allow us to 
 
 ```{r}
-inputData <- IntLim::ReadData('bc.ambs.csv',metabid='id',geneid='id')
-IntLim::ShowStats(inputData)
+inputData <- IntLIM::ReadData('bc.ambs.csv',metabid='id',geneid='id')
+IntLIM::ShowStats(inputData)
 ```
 
 From the OutputStats, we find that we have gene expression data involving 20,254 genes with 108 patient samples and metabolite abundance data involving 536 metabolites with 132 patient samples.  
@@ -44,14 +44,14 @@ From the OutputStats, we find that we have gene expression data involving 20,254
 The FilterData() functino is used to filter the data.  We remove genes with mean belows below the 10th percentile.  Furthermore, we remove metabolites with more than 80% missing values.  This results in gene expression data involving 18,228 genes and 108 patient samples and metabolite abundance data involving 379 metabolites and 132 patient samples.  
 
 ```{r}
-inputDatafilt <- IntLim::FilterData(inputData,geneperc=0.10, metabmiss = 0.80)
-IntLim::ShowStats(inputDatafilt)
+inputDatafilt <- IntLIM::FilterData(inputData,geneperc=0.10, metabmiss = 0.80)
+IntLIM::ShowStats(inputDatafilt)
 ```
 
 We can obtain boxplot distributions of the data as follows. This is used to make figures.  
 
 ```{r}
-IntLim::PlotDistributions(inputDatafilt, palette = c("black", "black"))
+IntLIM::PlotDistributions(inputDatafilt, palette = c("black", "black"))
 ```
 
 ## Principal Component Analysis
@@ -67,16 +67,16 @@ PlotPCA(inputDatafilt, stype = "DIAG", common = F)
 The linear model is for integrating transcriptomic and metabolomics data is:  E(m|g,t) = β1 + β2 g + β3 p + β4 (g:p) + ε where ‘m’ and ‘g’ are log-transformed metabolite abundances and gene levels respectively, ‘p’ is phenotype (cancer type, patient diagnosis, treatment group, etc), ‘(g:p)’ is the association between gene expression and phenotype, and ‘ε’ is the error term that is normally distributed.  A statistically significant p-value of the ‘(g:p)’ association term indicates that the slope relating gene expression and metabolite abundance is different from one phenotype compared to another. We run a linear model on tumor (n = 61) and non-tumor samples (n = 47) that included 18,228 genes and 379 metabolites (total of 6,908,412 possible associations and hence models).  For genes and metabolites that had standard deviations of 0 in one of the groups, we assign a p-value of NA.  The model is run as below by calling RunIntLim().  DistPvalues() allows us to obtain a distribution of p-values for the (g:p) term.  The pvalCorrVolcano function allows us to observe how p-values vary with correlation differences.  
 
 ```{r}
-myres <- IntLim::RunIntLim(inputDatafilt, stype="DIAG")
-IntLim::DistPvalues(myres)
-IntLim::pvalCorrVolcano(myres, inputDatafilt, diffcorr = 0, pvalcutoff = 1)
+myres <- IntLIM::RunIntLim(inputDatafilt, stype="DIAG")
+IntLIM::DistPvalues(myres)
+IntLIM::pvalCorrVolcano(myres, inputDatafilt, diffcorr = 0.5, pvalcutoff = 0.05)
 ```
 
 The next step is to process the results of this model by filtering the results of the linear model by FDR-adjusted p-value cutoff (0.10 selected here) for the (g:p) association coefficient and calculate the correlations of the gene-metabolite pairs in each group (tumor and non-tumor) for the filtered results.  We further may only interested in results that have an absolute correlation value difference (0.50 selected here). This is done with the ProcessResults function.  In addition we also develop a heatmap of the gene-metabolite association correlations for the selected groups.  
 
 ```{r}
-myres10 <- IntLim::ProcessResults(myres,  inputDatafilt, diffcorr = 0.50, pvalcutoff = 0.10)
-IntLim::CorrHeatmap(myres10)
+myres10 <- IntLIM::ProcessResults(myres,  inputDatafilt, diffcorr = 0.50, pvalcutoff = 0.10)
+IntLIM::CorrHeatmap(myres10)
 
 OutputResults(myres10, filename = "bcresults10.csv")
 dim(myres10@corr)
@@ -85,10 +85,10 @@ dim(myres10@corr)
 We find that we obtain 10,861 correlations.  We try to lessen the number by setting a more stringent p-value cutoff of 0.05 as done below.  
 
 ```{r}
-myres <- IntLim::ProcessResults(myres,  inputDatafilt, diffcorr = 0.50, pvalcutoff = 0.05)
+myres <- IntLIM::ProcessResults(myres,  inputDatafilt, diffcorr = 0.50, pvalcutoff = 0.05)
 #colnames(myres@filt.results)[3] <- "NORMAL"
 #colnames(myres@filt.results)[4] <- "TUMOR"
-IntLim::CorrHeatmap(myres, top_pairs = 3000)
+IntLIM::CorrHeatmap(myres, top_pairs = 3000)
 
 OutputResults(myres, filename = "bcresults5.csv")
 dim(myres@corr)
@@ -108,20 +108,20 @@ We can show some example plots of some of these pairs.  The first example is the
 
 ```{r}
 
-IntLim::PlotGMPair(inputDatafilt, stype = "DIAG", geneName = "PDLIM4", metabName = "adrenate (22:4n6)")
+IntLIM::PlotGMPair(inputDatafilt, stype = "DIAG", geneName = "PDLIM4", metabName = "adrenate (22:4n6)")
 
 ```
 
 We do find that there is one pair with 2-hydroxyglutarate at FDR adjusted p-value of 0.05 and correlation difference of over 0.5 with GPT2.  
 
 ```{r}
-IntLim::PlotGMPair(inputDatafilt, stype = "DIAG", geneName = "GPT2", metabName = "2-hydroxyglutarate")
+IntLIM::PlotGMPair(inputDatafilt, stype = "DIAG", geneName = "GPT2", metabName = "2-hydroxyglutarate")
 ```
 
 GPT2 and MYC are not linked as was in the Ambs paper.  
 
 ```{r}
-IntLim::PlotGMPair(inputDatafilt, stype = "DIAG", geneName = "MYC", metabName = "2-hydroxyglutarate")
+IntLIM::PlotGMPair(inputDatafilt, stype = "DIAG", geneName = "MYC", metabName = "2-hydroxyglutarate")
 ```
 
 ## Analyzing Clusters
