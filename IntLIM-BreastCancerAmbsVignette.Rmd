@@ -79,7 +79,7 @@ myres10 <- IntLIM::ProcessResults(myres,  inputDatafilt, diffcorr = 0.50, pvalcu
 IntLIM::CorrHeatmap(myres10)
 
 OutputResults(myres10, filename = "bcresults10.csv")
-dim(myres10@corr)
+dim(myres10@filt.results)
 ```
 
 We find that we obtain 10,861 correlations.  We try to lessen the number by setting a more stringent p-value cutoff of 0.05 as done below.  
@@ -91,7 +91,7 @@ myres <- IntLIM::ProcessResults(myres,  inputDatafilt, diffcorr = 0.50, pvalcuto
 IntLIM::CorrHeatmap(myres, top_pairs = 3000)
 
 OutputResults(myres, filename = "bcresults5.csv")
-dim(myres@corr)
+dim(myres@filt.results)
 ```
 
 
